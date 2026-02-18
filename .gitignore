@@ -1,0 +1,35 @@
+# Secrets & local config
+.env
+config/setup.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+
+# Model weights (add your own to models/)
+*.pt
+*.onnx
+*.engine
+models/*
+!models/.gitkeep
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# macOS
+.DS_Store
+
+# Videos / frames / outputs
+output/
+videos/
+recordings/
+*.mp4
+*.webm
