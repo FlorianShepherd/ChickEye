@@ -1,0 +1,44 @@
+services:
+  model:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: model
+    volumes:
+      - ./models:/app/models:ro
+    environment:
+      - MODEL_PATH=${MODEL_PATH:-/app/models/best.pt}
+      - MODEL_TYPE=${MODEL_TYPE:-0}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: backend
+    environment:
+      - VIDEO_SOURCE=${VIDEO_SOURCE:-0}
+      - MODEL_ENDPOINT=http://model:8080/predict
+      - CONFIDENCE=${CONFIDENCE:-0.6}
+      - CLASS_NAMES=${CLASS_NAMES:-Chicken 1,Chicken 2,Chicken 3,Chicken 4}
+      - CLASS_COLORS=${CLASS_COLORS:-#ef4444,#94a3b8,#3b82f6,#f59e0b}
+    depends_on:
+      model:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${HOST_PORT:-80}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
