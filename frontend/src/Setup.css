@@ -83,7 +83,8 @@
 }
 
 .setup-field input,
-.setup-field textarea {
+.setup-field textarea,
+.setup-field select {
   background: var(--bg-raised);
   border: 1px solid var(--border-light);
   border-radius: 8px;
@@ -96,8 +97,19 @@
   resize: vertical;
 }
 
+.setup-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
 .setup-field input:focus,
-.setup-field textarea:focus {
+.setup-field textarea:focus,
+.setup-field select:focus {
   border-color: rgba(148, 163, 184, 0.35);
 }
 

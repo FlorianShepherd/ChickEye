@@ -68,11 +68,13 @@ def _get_runtime_config() -> dict:
             "video_source":  setup.get("video_source",  _ENV_VIDEO_SOURCE),
             "class_names":   setup.get("class_names",   _ENV_CLASS_NAMES),
             "class_colors":  setup.get("class_colors",  _ENV_CLASS_COLORS),
+            "model_path":    setup.get("model_path",    None),
         }
     return {
         "video_source": _ENV_VIDEO_SOURCE,
         "class_names":  _ENV_CLASS_NAMES,
         "class_colors": _ENV_CLASS_COLORS,
+        "model_path":   None,
     }
 
 
@@ -105,6 +107,18 @@ async def setup_status():
 async def save_setup(body: dict):
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(body))
+    # If a model was selected, tell the model server to reload it
+    model_name = body.get("model_path")
+    if model_name:
+        model_full_path = str(MODELS_DIR / model_name)
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                await client.post(
+                    MODEL_ENDPOINT.replace("/predict", "/reload"),
+                    json={"model_path": model_full_path},
+                )
+        except Exception as e:
+            print(f"Model reload failed: {e}")
     return {"ok": True}
 
 

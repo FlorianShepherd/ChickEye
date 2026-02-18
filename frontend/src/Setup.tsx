@@ -15,6 +15,7 @@ export default function Setup({ onComplete }: SetupProps) {
   const [videoSource, setVideoSource] = useState('0')
   const [classNamesRaw, setClassNamesRaw] = useState('Chicken 1\nChicken 2\nChicken 3\nChicken 4')
   const [models, setModels] = useState<string[]>([])
+  const [selectedModel, setSelectedModel] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +24,15 @@ export default function Setup({ onComplete }: SetupProps) {
   useEffect(() => {
     fetch('/models')
       .then(r => r.json())
-      .then(d => setModels(d.models ?? []))
+      .then(d => {
+        const list: string[] = d.models ?? []
+        setModels(list)
+        if (list.length > 0) {
+          // Prefer trained models (not bare ultralytics base weights like yolo11n.pt)
+          const trained = list.filter(m => !/^yolo\d/i.test(m))
+          setSelectedModel(trained.length > 0 ? trained[0] : list[0])
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -74,6 +83,7 @@ export default function Setup({ onComplete }: SetupProps) {
           video_source: videoSource.trim() || '0',
           class_names: names,
           class_colors: colors,
+          model_path: selectedModel || undefined,
         }),
       })
       if (!res.ok) throw new Error('Server error')
@@ -168,22 +178,25 @@ export default function Setup({ onComplete }: SetupProps) {
             </div>
           </div>
 
-          {/* Available models */}
+          {/* Model selector */}
           {models.length > 0 && (
             <div className="setup-field">
-              <label>Available Models</label>
+              <label htmlFor="active-model">Active Model</label>
               <p className="field-hint">
-                Models found in <code>/app/models</code>. The active model is set via{' '}
-                <code>MODEL_PATH</code> in <code>docker-compose.yml</code>.
+                The model used for live detection. Train a new one in the{' '}
+                <strong>Train</strong> tab.
               </p>
-              <ul className="model-list">
+              <select
+                id="active-model"
+                value={selectedModel}
+                onChange={e => setSelectedModel(e.target.value)}
+              >
                 {models.map(m => (
-                  <li key={m} className="model-item">
-                    <span className="model-dot" />
-                    <span>{m}</span>
-                  </li>
+                  <option key={m} value={m}>
+                    {/^yolo\d/i.test(m) ? `${m} (base model)` : m}
+                  </option>
                 ))}
-              </ul>
+              </select>
             </div>
           )}
 

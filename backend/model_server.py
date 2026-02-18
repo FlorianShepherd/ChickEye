@@ -16,18 +16,51 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL_TYPE = os.getenv("MODEL_TYPE", "0")   # "0" = detection, "1" = segmentation
-MODEL_PATH = os.getenv("MODEL_PATH", "./best.pt")
+MODEL_TYPE   = os.getenv("MODEL_TYPE", "0")   # "0" = detection, "1" = segmentation
+MODEL_PATH   = os.getenv("MODEL_PATH", "/app/models/yolo11n.pt")
+MODELS_DIR   = os.getenv("MODELS_DIR", "/app/models")
 TARGET_WIDTH = int(os.getenv("TARGET_WIDTH", "640"))
 
-print(f"Loading model: {MODEL_PATH}")
-model = YOLO(MODEL_PATH)
-print("Model ready.")
+model = None
+current_model_path = None
+
+
+def _load_model(path: str) -> bool:
+    global model, current_model_path
+    if not os.path.exists(path):
+        print(f"Model file not found: {path}")
+        return False
+    try:
+        print(f"Loading model: {path}")
+        model = YOLO(path)
+        current_model_path = path
+        print("Model ready.")
+        return True
+    except Exception as e:
+        print(f"Failed to load model {path}: {e}")
+        return False
+
+
+# Try configured path first, then fall back to any .pt in MODELS_DIR
+if not _load_model(MODEL_PATH):
+    fallbacks = sorted(
+        f for f in os.listdir(MODELS_DIR)
+        if f.endswith(".pt")
+    ) if os.path.isdir(MODELS_DIR) else []
+    for fb in fallbacks:
+        if _load_model(os.path.join(MODELS_DIR, fb)):
+            break
+    else:
+        print("WARNING: No model loaded. Server will start but /predict will fail until a model is loaded via /reload.")
 
 
 class PredictionRequest(BaseModel):
     image: str       # base64-encoded JPEG
     confidence: float = 0.6
+
+
+class ReloadRequest(BaseModel):
+    model_path: str
 
 
 def _resize(frame: np.ndarray, width: int) -> np.ndarray:
@@ -37,11 +70,27 @@ def _resize(frame: np.ndarray, width: int) -> np.ndarray:
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    if model is None:
+        raise HTTPException(status_code=503, detail="No model loaded")
+    return {"status": "healthy", "model": current_model_path}
+
+
+@app.post("/reload")
+async def reload_model(req: ReloadRequest):
+    global model, current_model_path
+    if not os.path.exists(req.model_path):
+        raise HTTPException(status_code=404, detail=f"Model not found: {req.model_path}")
+    print(f"Reloading model: {req.model_path}")
+    model = YOLO(req.model_path)
+    current_model_path = req.model_path
+    print("Model reloaded.")
+    return {"ok": True, "model": current_model_path}
 
 
 @app.post("/predict")
 async def predict(req: PredictionRequest):
+    if model is None:
+        raise HTTPException(status_code=503, detail="No model loaded")
     try:
         data = base64.b64decode(req.image)
         arr = np.frombuffer(data, np.uint8)

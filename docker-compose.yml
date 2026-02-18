@@ -7,8 +7,9 @@ services:
     volumes:
       - ./models:/app/models:ro
     environment:
-      - MODEL_PATH=${MODEL_PATH:-/app/models/yolo11n.pt}
+      - MODEL_PATH=${MODEL_PATH:-/app/models/best11n.pt}
       - MODEL_TYPE=${MODEL_TYPE:-0}
+      - MODELS_DIR=/app/models
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
