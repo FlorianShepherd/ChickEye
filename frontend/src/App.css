@@ -16,6 +16,15 @@
   --red:    #ef4444;
 }
 
+/* ── Loading splash ───────────────────────────────────────────────────────── */
+.app-splash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--bg-base);
+}
+
 /* ── Root layout ──────────────────────────────────────────────────────────── */
 .app {
   display: flex;
@@ -54,6 +63,30 @@
   font-weight: 700;
   color: var(--text-1);
   letter-spacing: -0.02em;
+}
+
+/* ── Settings button ──────────────────────────────────────────────────────── */
+.settings-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.settings-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+  border-color: var(--border-light);
 }
 
 /* ── Navigation tabs ──────────────────────────────────────────────────────── */

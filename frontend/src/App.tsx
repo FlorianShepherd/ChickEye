@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CSSProperties } from 'react'
 import CategoryManagement from './CategoryManagement'
+import Setup from './Setup'
 import './App.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -206,16 +207,54 @@ function LiveView({ config }: { config: Config }) {
 
 // ── App ────────────────────────────────────────────────────────────────────
 
+function loadConfig(setConfig: (c: Config) => void) {
+  fetch('/config')
+    .then(r => r.json())
+    .then((d: Config) => setConfig(d))
+    .catch(() => { /* fall back to defaults */ })
+}
+
 export default function App() {
   const [view, setView] = useState<View>('live')
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG)
+  // null = checking, false = setup needed, true = ready
+  const [setupDone, setSetupDone] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch('/config')
+    fetch('/setup-status')
       .then(r => r.json())
-      .then((d: Config) => setConfig(d))
-      .catch(() => { /* fall back to defaults */ })
+      .then(d => setSetupDone(Boolean(d.setup_done)))
+      .catch(() => setSetupDone(true)) // backend unreachable → skip setup gate
   }, [])
+
+  useEffect(() => {
+    if (setupDone) loadConfig(setConfig)
+  }, [setupDone])
+
+  // ── Loading splash ────────────────────────────────────────────────────────
+
+  if (setupDone === null) {
+    return (
+      <div className="app-splash">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  // ── First-run setup ───────────────────────────────────────────────────────
+
+  if (!setupDone) {
+    return (
+      <Setup
+        onComplete={() => {
+          setSetupDone(true)
+          loadConfig(setConfig)
+        }}
+      />
+    )
+  }
+
+  // ── Main app ──────────────────────────────────────────────────────────────
 
   return (
     <div className="app">
@@ -238,6 +277,14 @@ export default function App() {
             Label Data
           </button>
         </nav>
+        <button
+          className="settings-btn"
+          onClick={() => setSetupDone(false)}
+          title="Open setup"
+          aria-label="Open setup"
+        >
+          ⚙
+        </button>
       </header>
 
       {view === 'live' ? <LiveView config={config} /> : <CategoryManagement />}

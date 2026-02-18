@@ -1,0 +1,232 @@
+/* ── Setup page ────────────────────────────────────────────────────────────── */
+
+.setup-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--bg-base);
+  overflow-y: auto;
+}
+
+.setup-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 40px;
+}
+
+/* Logo */
+.setup-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.setup-logo span {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.setup-logo h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.setup-subtitle {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+/* Form */
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.setup-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+.field-hint code {
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 11px;
+  background: var(--bg-raised);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.setup-field input,
+.setup-field textarea {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-1);
+  font-size: 13px;
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  outline: none;
+  transition: border-color 0.15s;
+  resize: vertical;
+}
+
+.setup-field input:focus,
+.setup-field textarea:focus {
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.setup-field input::placeholder,
+.setup-field textarea::placeholder {
+  color: var(--text-3);
+}
+
+/* Quick-fill buttons */
+.field-examples {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.field-examples > span {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.field-examples button {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-raised);
+  color: var(--text-2);
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.field-examples button:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+/* Live class preview chips */
+.class-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.class-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--chip-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+  color: var(--chip-color);
+}
+
+/* Model list */
+.model-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+}
+
+.model-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  flex-shrink: 0;
+}
+
+/* Error */
+.setup-error {
+  font-size: 13px;
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* Submit button */
+.setup-submit {
+  padding: 13px;
+  border-radius: 9px;
+  border: none;
+  background: var(--green);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: -0.01em;
+}
+
+.setup-submit:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.setup-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.setup-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .setup-card {
+    padding: 28px 20px;
+  }
+}

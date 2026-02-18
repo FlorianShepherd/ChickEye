@@ -7,7 +7,7 @@ services:
     volumes:
       - ./models:/app/models:ro
     environment:
-      - MODEL_PATH=${MODEL_PATH:-/app/models/best.pt}
+      - MODEL_PATH=${MODEL_PATH:-/app/models/yolo11n.pt}
       - MODEL_TYPE=${MODEL_TYPE:-0}
     restart: unless-stopped
     healthcheck:
@@ -22,12 +22,17 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: backend
+    volumes:
+      - ./models:/app/models:ro
+      - ./config:/config
     environment:
       - VIDEO_SOURCE=${VIDEO_SOURCE:-0}
       - MODEL_ENDPOINT=http://model:8080/predict
       - CONFIDENCE=${CONFIDENCE:-0.6}
       - CLASS_NAMES=${CLASS_NAMES:-Chicken 1,Chicken 2,Chicken 3,Chicken 4}
       - CLASS_COLORS=${CLASS_COLORS:-#ef4444,#94a3b8,#3b82f6,#f59e0b}
+      - CONFIG_FILE=/config/setup.json
+      - MODELS_DIR=/app/models
     depends_on:
       model:
         condition: service_healthy

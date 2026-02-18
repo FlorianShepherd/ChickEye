@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 import asyncio
 import os
+import json
+from pathlib import Path
 from datetime import datetime
 import base64
 from collections import deque
@@ -20,19 +22,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# ── Static configuration (from env only) ──────────────────────────────────────
 
 CONFIDENCE = float(os.getenv("CONFIDENCE", "0.6"))
 MODEL_ENDPOINT = os.getenv("MODEL_ENDPOINT", "http://localhost:8080/predict")
-VIDEO_SOURCE_RAW = os.getenv("VIDEO_SOURCE", "0")
 RECORDING_PATH = os.getenv("RECORDING_PATH", "")
+CONFIG_FILE = Path(os.getenv("CONFIG_FILE", "/config/setup.json"))
+MODELS_DIR = Path(os.getenv("MODELS_DIR", "/app/models"))
 
-_names_raw = os.getenv("CLASS_NAMES", "Chicken 1,Chicken 2,Chicken 3,Chicken 4")
-_colors_raw = os.getenv("CLASS_COLORS", "#ef4444,#94a3b8,#3b82f6,#f59e0b")
+# ── Env defaults (used before first-run setup is complete) ────────────────────
 
-CLASS_NAMES = [n.strip() for n in _names_raw.split(",")]
-CLASS_COLORS_HEX = [c.strip() for c in _colors_raw.split(",")]
-NUM_CLASSES = len(CLASS_NAMES)
+_ENV_VIDEO_SOURCE = os.getenv("VIDEO_SOURCE", "0")
+_ENV_CLASS_NAMES = [n.strip() for n in os.getenv("CLASS_NAMES", "Chicken 1,Chicken 2,Chicken 3,Chicken 4").split(",")]
+_ENV_CLASS_COLORS = [c.strip() for c in os.getenv("CLASS_COLORS", "#ef4444,#94a3b8,#3b82f6,#f59e0b").split(",")]
 
 
 def _hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
@@ -41,14 +43,40 @@ def _hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
     return (b, g, r)
 
 
-CLASS_COLORS_BGR = [_hex_to_bgr(c) for c in CLASS_COLORS_HEX]
+# ── Setup / runtime config ────────────────────────────────────────────────────
 
 
-def _video_source():
+def _load_setup() -> dict | None:
+    """Return parsed setup JSON, or None if first-run setup has not been done."""
+    if CONFIG_FILE.exists():
+        try:
+            return json.loads(CONFIG_FILE.read_text())
+        except Exception:
+            pass
+    return None
+
+
+def _get_runtime_config() -> dict:
+    """Merge saved setup with env-var defaults."""
+    setup = _load_setup()
+    if setup:
+        return {
+            "video_source":  setup.get("video_source",  _ENV_VIDEO_SOURCE),
+            "class_names":   setup.get("class_names",   _ENV_CLASS_NAMES),
+            "class_colors":  setup.get("class_colors",  _ENV_CLASS_COLORS),
+        }
+    return {
+        "video_source": _ENV_VIDEO_SOURCE,
+        "class_names":  _ENV_CLASS_NAMES,
+        "class_colors": _ENV_CLASS_COLORS,
+    }
+
+
+def _parse_video_source(raw: str):
     try:
-        return int(VIDEO_SOURCE_RAW)
+        return int(raw)
     except ValueError:
-        return VIDEO_SOURCE_RAW
+        return raw
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -64,9 +92,31 @@ async def health():
     return {"status": "healthy"}
 
 
+@app.get("/setup-status")
+async def setup_status():
+    return {"setup_done": _load_setup() is not None}
+
+
+@app.post("/setup")
+async def save_setup(body: dict):
+    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE.write_text(json.dumps(body))
+    return {"ok": True}
+
+
+@app.get("/models")
+async def list_models():
+    if MODELS_DIR.exists():
+        models = sorted(f.name for f in MODELS_DIR.glob("*.pt"))
+    else:
+        models = []
+    return {"models": models}
+
+
 @app.get("/config")
 async def config():
-    return {"names": CLASS_NAMES, "colors": CLASS_COLORS_HEX}
+    cfg = _get_runtime_config()
+    return {"names": cfg["class_names"], "colors": cfg["class_colors"]}
 
 
 @app.post("/save-video")
@@ -100,13 +150,13 @@ async def _call_model(frame: np.ndarray) -> list:
         return []
 
 
-def _draw(frame: np.ndarray, detections: list) -> np.ndarray:
+def _draw(frame: np.ndarray, detections: list, class_names: list, colors_bgr: list) -> np.ndarray:
     for det in detections:
         x1, y1, x2, y2 = (int(v) for v in det["bbox"])
         cls = det["class"]
         conf = det["confidence"]
-        color = CLASS_COLORS_BGR[cls] if cls < len(CLASS_COLORS_BGR) else (255, 255, 255)
-        name = CLASS_NAMES[cls] if cls < len(CLASS_NAMES) else str(cls)
+        color = colors_bgr[cls] if cls < len(colors_bgr) else (255, 255, 255)
+        name = class_names[cls] if cls < len(class_names) else str(cls)
 
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
@@ -114,7 +164,6 @@ def _draw(frame: np.ndarray, detections: list) -> np.ndarray:
         (lw, lh), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 1)
         cv2.rectangle(frame, (x1, y1 - lh - 8), (x1 + lw, y1), color, -1)
 
-        # White text on coloured background (except very light colours)
         font_color = (0, 0, 0) if sum(color) > 500 else (255, 255, 255)
         cv2.putText(frame, label, (x1, y1 - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, font_color, 1)
 
@@ -144,10 +193,15 @@ def _encode_frame(frame: np.ndarray, quality: int = 60) -> bytes:
 async def ws_video(websocket: WebSocket):
     await websocket.accept()
 
-    # Rolling detection history for stability filtering
-    history: dict[int, Deque[int]] = {i: deque(maxlen=10) for i in range(NUM_CLASSES)}
+    # Read fresh config so any post-setup settings apply immediately
+    cfg = _get_runtime_config()
+    class_names = cfg["class_names"]
+    class_colors_bgr = [_hex_to_bgr(c) for c in cfg["class_colors"]]
+    num_classes = len(class_names)
 
-    source = _video_source()
+    history: dict[int, Deque[int]] = {i: deque(maxlen=10) for i in range(num_classes)}
+
+    source = _parse_video_source(cfg["video_source"])
     print(f"Opening video source: {source}")
     cap = cv2.VideoCapture(source)
 
@@ -165,22 +219,20 @@ async def ws_video(websocket: WebSocket):
 
             detections = await _call_model(frame)
 
-            # Update presence history for each class
             detected_classes = {d["class"] for d in detections}
-            for cls in range(NUM_CLASSES):
+            for cls in range(num_classes):
                 history[cls].append(1 if cls in detected_classes else 0)
 
-            # Keep only detections present in ≥80 % of the last 10 frames
             stable = [
                 d for d in detections
-                if d["class"] < NUM_CLASSES
+                if d["class"] < num_classes
                 and len(history[d["class"]]) > 0
                 and sum(history[d["class"]]) / len(history[d["class"]]) >= 0.8
             ]
             stable.sort(key=lambda d: d["confidence"], reverse=True)
-            stable = stable[:NUM_CLASSES]
+            stable = stable[:num_classes]
 
-            annotated = _draw(frame.copy(), stable)
+            annotated = _draw(frame.copy(), stable, class_names, class_colors_bgr)
             frame_bytes = _encode_frame(annotated)
 
             await websocket.send_json({
