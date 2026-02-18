@@ -5,11 +5,14 @@ import numpy as np
 import asyncio
 import os
 import json
+import subprocess
+import sys
+import threading
 from pathlib import Path
 from datetime import datetime
 import base64
 from collections import deque
-from typing import Deque
+from typing import Deque, Optional
 import httpx
 import time
 
@@ -29,6 +32,7 @@ MODEL_ENDPOINT = os.getenv("MODEL_ENDPOINT", "http://localhost:8080/predict")
 RECORDING_PATH = os.getenv("RECORDING_PATH", "")
 CONFIG_FILE = Path(os.getenv("CONFIG_FILE", "/config/setup.json"))
 MODELS_DIR = Path(os.getenv("MODELS_DIR", "/app/models"))
+DATASETS_DIR = Path(os.getenv("DATASETS_DIR", "/app/datasets"))
 
 # ── Env defaults (used before first-run setup is complete) ────────────────────
 
@@ -131,6 +135,19 @@ async def save_video(file: UploadFile = File(...)):
     return {"message": "Saved", "path": path}
 
 
+@app.post("/upload-video")
+async def upload_video(file: UploadFile = File(...)):
+    uploads_dir = CONFIG_FILE.parent / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    # Sanitise filename: keep only safe characters
+    safe_name = "".join(c for c in (file.filename or "video") if c.isalnum() or c in "._- ")
+    safe_name = safe_name.strip() or "video"
+    dest = uploads_dir / safe_name
+    with open(dest, "wb") as f:
+        f.write(await file.read())
+    return {"path": str(dest)}
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -186,6 +203,98 @@ def _encode_frame(frame: np.ndarray, quality: int = 60) -> bytes:
     return buf.tobytes()
 
 
+# ── Training ──────────────────────────────────────────────────────────────────
+
+_train_lock = threading.Lock()
+_train_running: bool = False
+_train_logs: list[str] = []
+_train_error: Optional[str] = None
+_train_output: Optional[str] = None
+
+
+@app.get("/datasets")
+async def list_datasets():
+    if DATASETS_DIR.exists():
+        datasets = sorted(
+            d.name for d in DATASETS_DIR.iterdir()
+            if d.is_dir() and (d / "data.yaml").exists()
+        )
+    else:
+        datasets = []
+    return {"datasets": datasets}
+
+
+@app.post("/train/start")
+async def train_start(body: dict):
+    global _train_running, _train_logs, _train_error, _train_output
+
+    with _train_lock:
+        if _train_running:
+            return {"error": "Training is already running"}
+        _train_running = True
+        _train_logs = []
+        _train_error = None
+        _train_output = None
+
+    dataset = body.get("dataset", "chicken")
+    model   = body.get("model",   "yolo11n.pt")
+    epochs  = int(body.get("epochs", 100))
+    imgsz   = int(body.get("imgsz",  640))
+    output  = body.get("output",  "trained")
+
+    def run():
+        global _train_running, _train_error, _train_output
+        try:
+            cmd = [
+                sys.executable, "/app/train.py",
+                "--dataset",    str(DATASETS_DIR / dataset),
+                "--model",      model,
+                "--epochs",     str(epochs),
+                "--imgsz",      str(imgsz),
+                "--output",     output,
+                "--models-dir", str(MODELS_DIR),
+            ]
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+            for line in proc.stdout:
+                line = line.rstrip()
+                if line:
+                    with _train_lock:
+                        _train_logs.append(line)
+            proc.wait()
+            if proc.returncode != 0:
+                with _train_lock:
+                    _train_error = f"Training failed (exit code {proc.returncode})"
+            else:
+                with _train_lock:
+                    _train_output = f"{output}.pt"
+        except Exception as e:
+            with _train_lock:
+                _train_error = str(e)
+        finally:
+            with _train_lock:
+                _train_running = False
+
+    threading.Thread(target=run, daemon=True).start()
+    return {"ok": True}
+
+
+@app.get("/train/status")
+async def train_status():
+    with _train_lock:
+        return {
+            "running": _train_running,
+            "logs":    list(_train_logs[-300:]),
+            "error":   _train_error,
+            "output":  _train_output,
+        }
+
+
 # ── WebSocket ─────────────────────────────────────────────────────────────────
 
 
@@ -214,6 +323,8 @@ async def ws_video(websocket: WebSocket):
         while True:
             ret, frame = cap.read()
             if not ret:
+                # End of file — loop back to the start if it's a video file
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 await asyncio.sleep(0.1)
                 continue
 

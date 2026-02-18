@@ -19,6 +19,6 @@ CMD ["uvicorn", "model_server:app", "--host", "0.0.0.0", "--port", "8080"]
 
 # ── WebSocket streaming backend ───────────────────────────────────────────────
 FROM base AS backend
-COPY main.py .
+COPY main.py train.py ./
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

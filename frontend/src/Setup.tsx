@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './Setup.css'
 
 // Default palette — assigned automatically based on class count
@@ -16,7 +16,9 @@ export default function Setup({ onComplete }: SetupProps) {
   const [classNamesRaw, setClassNamesRaw] = useState('Chicken 1\nChicken 2\nChicken 3\nChicken 4')
   const [models, setModels] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/models')
@@ -24,6 +26,27 @@ export default function Setup({ onComplete }: SetupProps) {
       .then(d => setModels(d.models ?? []))
       .catch(() => {})
   }, [])
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/upload-video', { method: 'POST', body: form })
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      setVideoSource(data.path)
+    } catch {
+      setError('Video upload failed. Is the backend running?')
+    } finally {
+      setUploading(false)
+      // Reset so the same file can be re-selected if needed
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -96,6 +119,20 @@ export default function Setup({ onComplete }: SetupProps) {
               <button type="button" onClick={() => setVideoSource('rtsp://user:pass@192.168.1.100:554/stream')}>
                 RTSP template
               </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading…' : 'Upload video file'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/*,.mp4,.avi,.mov,.mkv,.webm"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
             </div>
           </div>
 

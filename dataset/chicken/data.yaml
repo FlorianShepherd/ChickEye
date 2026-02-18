@@ -1,0 +1,9 @@
+names:
+  0: Babette
+  1: Matilda
+  2: Eggbert
+  3: Lottie
+# ---
+path: chicken # dataset root dir
+train: images/train # train images (relative to 'path') 4 images
+val: images/val # val images (relative to 'path') 4 images

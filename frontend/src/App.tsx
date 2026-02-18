@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CSSProperties } from 'react'
-import CategoryManagement from './CategoryManagement'
+import Train from './Train'
 import Setup from './Setup'
 import './App.css'
 
@@ -17,7 +17,7 @@ interface Config {
   colors: string[]
 }
 
-type View = 'live' | 'label'
+type View = 'live' | 'train'
 
 const DEFAULT_CONFIG: Config = {
   names: ['Class 0', 'Class 1', 'Class 2', 'Class 3'],
@@ -271,10 +271,10 @@ export default function App() {
             Live View
           </button>
           <button
-            className={`nav-btn${view === 'label' ? ' active' : ''}`}
-            onClick={() => setView('label')}
+            className={`nav-btn${view === 'train' ? ' active' : ''}`}
+            onClick={() => setView('train')}
           >
-            Label Data
+            Train
           </button>
         </nav>
         <button
@@ -287,7 +287,7 @@ export default function App() {
         </button>
       </header>
 
-      {view === 'live' ? <LiveView config={config} /> : <CategoryManagement />}
+      {view === 'live' ? <LiveView config={config} /> : <Train />}
     </div>
   )
 }

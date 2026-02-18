@@ -23,8 +23,9 @@ services:
       dockerfile: Dockerfile
       target: backend
     volumes:
-      - ./models:/app/models:ro
+      - ./models:/app/models
       - ./config:/config
+      - ./dataset:/app/datasets:ro
     environment:
       - VIDEO_SOURCE=${VIDEO_SOURCE:-0}
       - MODEL_ENDPOINT=http://model:8080/predict
@@ -33,6 +34,7 @@ services:
       - CLASS_COLORS=${CLASS_COLORS:-#ef4444,#94a3b8,#3b82f6,#f59e0b}
       - CONFIG_FILE=/config/setup.json
       - MODELS_DIR=/app/models
+      - DATASETS_DIR=/app/datasets
     depends_on:
       model:
         condition: service_healthy
