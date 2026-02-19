@@ -33,3 +33,6 @@ videos/
 recordings/
 *.mp4
 *.webm
+
+# Allow the website demo video
+!docs/images/dashboard.mp4
