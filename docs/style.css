@@ -141,6 +141,15 @@ section { padding: 90px 0; background: var(--bg-base); }
   background: var(--bg-hover);
 }
 
+.nav-github {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+}
+
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -273,6 +282,19 @@ section { padding: 90px 0; background: var(--bg-base); }
 }
 
 .btn-secondary:hover {
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.07);
+}
+
+.btn-github {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255,255,255,0.28);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-github:hover {
   border-color: rgba(255,255,255,0.6);
   background: rgba(255,255,255,0.07);
 }
