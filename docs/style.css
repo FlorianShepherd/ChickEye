@@ -253,7 +253,9 @@ section { padding: 90px 0; background: var(--bg-base); }
 }
 
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 14px 28px;
   border-radius: 10px;
   font-weight: 600;
@@ -290,8 +292,6 @@ section { padding: 90px 0; background: var(--bg-base); }
   background: transparent;
   color: #fff;
   border-color: rgba(255,255,255,0.28);
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
 }
 .btn-github:hover {

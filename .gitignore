@@ -15,6 +15,9 @@ venv/
 *.engine
 models/*
 !models/.gitkeep
+!models/best11n.pt
+!models/best11m.pt
+!models/best11l.pt
 
 # Node
 node_modules/
