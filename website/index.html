@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChickEye — AI Chicken Monitoring</title>
+  <meta name="description" content="ChickEye is an open-source, AI-powered chicken monitoring system that uses custom-trained YOLO models to identify individual chickens in real time.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="images/egg_favicon.png" type="image/png">
+</head>
+<body>
+
+<!-- ============================
+     Navigation
+     ============================ -->
+<nav id="navbar">
+  <div class="nav-container">
+    <a href="#hero" class="nav-brand">
+      <span class="nav-logo">🐔</span>
+      ChickEye
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#training">Training Guide</a></li>
+      <li><a href="#hosting">Hosting Guide</a></li>
+      <li><a href="#tech">Tech Stack</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============================
+     Hero
+     ============================ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-content">
+    <div class="hero-badge">Open Source Project</div>
+    <h1>ChickEye</h1>
+    <p class="hero-tagline">AI-powered chicken monitoring with custom-trained YOLO models</p>
+    <p class="hero-desc">
+      Identify individual chickens in real time using computer vision.
+      Built with YOLO11, FastAPI, and a live React dashboard — self-hosted on your own hardware.
+    </p>
+    <div class="hero-actions">
+      <a href="#training" class="btn btn-primary">Train Your Model</a>
+      <a href="#hosting" class="btn btn-secondary">Host Your Server</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll to explore</span>
+    <div class="scroll-arrow">↓</div>
+  </div>
+</section>
+
+<!-- ============================
+     Overview
+     ============================ -->
+<section id="overview">
+  <div class="container">
+    <h2 class="section-title">What is ChickEye?</h2>
+    <p class="section-sub">A complete, self-hosted monitoring system for your chicken coop</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎥</div>
+        <h3>Real-time Detection</h3>
+        <p>Processes live video from IP cameras or webcams at up to 5 FPS using optimized YOLO inference running locally on your hardware.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Individual Identification</h3>
+        <p>Distinguishes specific chickens by name — Babette, Matilda, Eggbert, and Lottie — each with a unique color-coded bounding box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <h3>Built-in Training</h3>
+        <p>Train custom YOLO models directly from the web interface. Select your dataset, configure epochs and image size, and watch live training logs — no terminal needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Live Dashboard</h3>
+        <p>A React web interface streams the annotated video feed and shows each chicken's last-seen timestamp in real time via WebSocket.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📁</div>
+        <h3>Video File Support</h3>
+        <p>Use RTSP streams, webcams, or upload video files directly from the browser. Video files loop automatically — great for testing your model offline.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>REST &amp; WebSocket API</h3>
+        <p>Full API with JSON endpoints and WebSocket support for building your own integrations, dashboards, or notification systems.</p>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <h3>Detection Pipeline</h3>
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="pipeline-icon">📷</div>
+          <div class="pipeline-label">IP Camera<br><small>RTSP stream</small></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🖥️</div>
+          <div class="pipeline-label">Frame Capture<br><small>OpenCV</small></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🧠</div>
+          <div class="pipeline-label">YOLO Inference<br><small>Custom model</small></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🔎</div>
+          <div class="pipeline-label">Temporal Filter<br><small>80% threshold</small></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">📡</div>
+          <div class="pipeline-label">WebSocket<br><small>Live feed</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     Dashboard / Live UI
+     ============================ -->
+<section id="dashboard">
+  <div class="container">
+    <h2 class="section-title">The Live Dashboard</h2>
+    <p class="section-sub">A React web app that shows the live camera feed with detections in real time</p>
+
+    <div class="video-wrapper">
+      <video
+        src="images/dashboard.mp4"
+        autoplay
+        loop
+        muted
+        playsinline
+        class="dashboard-video"
+        aria-label="Screen recording of the ChickEye live dashboard"
+      ></video>
+      <div class="video-caption">Screen recording of the live dashboard — chickens detected and named in real time</div>
+    </div>
+
+    <div class="features-grid">
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:var(--green);">📹</div>
+        <div>
+          <h3>Live Video Stream</h3>
+          <p>The left panel shows the camera feed rendered on an HTML <code>&lt;canvas&gt;</code> element. Each frame arrives over a WebSocket connection as a hex-encoded JPEG and is decoded in the browser — no extra plugins needed. Bounding boxes and labels are overlaid directly by the backend before sending.</p>
+        </div>
+      </div>
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:#f59e0b;">📋</div>
+        <div>
+          <h3>Detection Status Cards</h3>
+          <p>The right panel shows a live card for every configured chicken. When <strong>detected</strong>, the card highlights in the chicken's color and shows a confidence progress bar. When <strong>absent</strong>, a "Last seen" timestamp tells you when it was last in frame.</p>
+          <div class="card-demo">
+            <div class="card-demo-item active" style="--color:#ef4444">
+              <div class="card-demo-indicator"><span class="card-demo-dot active"></span></div>
+              <div class="card-demo-body">
+                <span class="card-demo-name">Babette</span>
+                <div class="card-demo-bar-row">
+                  <div class="card-demo-bar"><div class="card-demo-fill" style="width:94%"></div></div>
+                  <span class="card-demo-pct">94%</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-demo-item" style="--color:#94a3b8">
+              <div class="card-demo-indicator"><span class="card-demo-dot"></span></div>
+              <div class="card-demo-body">
+                <span class="card-demo-name">Matilda</span>
+                <span class="card-demo-last">Last seen 14:32</span>
+              </div>
+            </div>
+            <div class="card-demo-item active" style="--color:#3b82f6">
+              <div class="card-demo-indicator"><span class="card-demo-dot active"></span></div>
+              <div class="card-demo-body">
+                <span class="card-demo-name">Eggbert</span>
+                <div class="card-demo-bar-row">
+                  <div class="card-demo-bar"><div class="card-demo-fill" style="width:88%"></div></div>
+                  <span class="card-demo-pct">88%</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-demo-item active" style="--color:#f59e0b">
+              <div class="card-demo-indicator"><span class="card-demo-dot active"></span></div>
+              <div class="card-demo-body">
+                <span class="card-demo-name">Lottie</span>
+                <div class="card-demo-bar-row">
+                  <div class="card-demo-bar"><div class="card-demo-fill" style="width:91%"></div></div>
+                  <span class="card-demo-pct">91%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:#ef4444;">🏷️</div>
+        <div>
+          <h3>Per-chicken Colors &amp; Names</h3>
+          <p>Every chicken has a unique color used consistently across the bounding boxes, egg icons, and name labels. When detected, the name is shown in full color. When absent, the name is <span style="color:#ccc; text-decoration:line-through;">struck through in grey</span> — so you always know exactly who is missing.</p>
+          <div class="color-legend">
+            <span class="legend-chip" style="background:#ef4444;">Babette</span>
+            <span class="legend-chip" style="background:#94a3b8;">Matilda</span>
+            <span class="legend-chip" style="background:#3b82f6;">Eggbert</span>
+            <span class="legend-chip" style="background:#f59e0b;">Lottie</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:var(--green);">📊</div>
+        <div>
+          <h3>Confidence Score</h3>
+          <p>When a chicken is actively detected, the model's confidence is shown as a percentage below the name (e.g. <strong>94%</strong>). This lets you tune the <code>CONFIDENCE</code> setting in <code>docker-compose.yml</code> or the <code>.env</code> file — raise it to reduce false positives, lower it to catch more detections.</p>
+        </div>
+      </div>
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:#60a5fa;">🕐</div>
+        <div>
+          <h3>Last Seen Timestamp</h3>
+          <p>When a chicken is <em>not</em> currently visible, the dashboard shows the last time it was detected (e.g. <strong>Last seen: 14:32</strong>). This is tracked in React state and persists for the whole browser session — useful for spotting if a chicken hasn't appeared all day.</p>
+        </div>
+      </div>
+
+      <div class="feature-detail">
+        <div class="feature-detail-icon" style="background:var(--bg-raised); color:#f59e0b;">⚡</div>
+        <div>
+          <h3>FPS &amp; Latency Monitor</h3>
+          <p>A metrics panel above the video shows live performance data: current <strong>frames per second</strong>, the <strong>server-side timestamp</strong> when the frame was captured, the <strong>frontend timestamp</strong> when it was received, and the calculated <strong>end-to-end latency</strong> in milliseconds — handy for diagnosing network or processing delays.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     Gallery
+     ============================ -->
+<section id="gallery" class="section-dark">
+  <div class="container">
+    <h2 class="section-title">Detection in Action</h2>
+    <p class="section-sub">Real frames from the coop with YOLO bounding boxes drawn by the model</p>
+
+    <div class="gallery-grid">
+      <div class="gallery-item" onclick="openLightbox(0)">
+        <img src="images/chicken_00221.jpg" alt="All four chickens detected with bounding boxes" loading="lazy">
+        <div class="gallery-overlay"><span>All four chickens identified</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox(1)">
+        <img src="images/chicken_00198.jpg" alt="Per-chicken classification with bounding boxes" loading="lazy">
+        <div class="gallery-overlay"><span>Per-chicken classification</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox(2)">
+        <img src="images/chicken_00100.jpg" alt="Three chickens detected in the coop" loading="lazy">
+        <div class="gallery-overlay"><span>Named bounding boxes</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox(3)">
+        <img src="images/chicken_00050.jpg" alt="Four chickens tracked simultaneously" loading="lazy">
+        <div class="gallery-overlay"><span>Four chickens tracked</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox(4)">
+        <img src="images/chicken_00010.jpg" alt="Full coop overview with all detections" loading="lazy">
+        <div class="gallery-overlay"><span>Full coop overview</span></div>
+      </div>
+    </div>
+
+    <p class="gallery-note">
+      Each color corresponds to an individual chicken. Bounding boxes and confidence scores are rendered in real time.
+      Click any image to enlarge.
+    </p>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-prev" onclick="prevImage(event)">‹</button>
+  <img id="lightboxImg" src="" alt="Detection frame enlarged">
+  <button class="lightbox-next" onclick="nextImage(event)">›</button>
+</div>
+
+<!-- ============================
+     Training Guide
+     ============================ -->
+<section id="training">
+  <div class="container">
+    <h2 class="section-title">Training Your Custom YOLO Model</h2>
+    <p class="section-sub">A step-by-step guide to building a chicken recognition model from scratch</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">01</div>
+        <div>
+          <h3>Collect Video Footage</h3>
+          <p class="step-desc">Record your chickens from the exact camera angle you'll use for monitoring</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>The quality of your training data determines the quality of your model. Use the camera in its final installed position — the model learns the specific viewpoint, lighting, and resolution it's trained on.</p>
+        <ul class="tip-list">
+          <li>Record at least 30–60 minutes of footage across multiple sessions</li>
+          <li>Capture different times of day (morning, noon, evening) for varied lighting conditions</li>
+          <li>Record each individual chicken separately, so you have clear examples of each class</li>
+          <li>Record all chickens together to teach the model to differentiate them</li>
+          <li>Include challenging cases: partially hidden chickens, chickens close together, chickens in motion</li>
+          <li>Ensure your recording resolution matches what the final system will use (e.g. 640 × 480 or 1280 × 720)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">02</div>
+        <div>
+          <h3>Extract Frames from Video</h3>
+          <p class="step-desc">Convert your recordings into individual images for labeling</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>Extract frames at a rate that gives enough diversity without excessive redundancy. Every 1–2 seconds (every 30–60th frame at 30 FPS) usually works well. Aim for 500–2 000 images total across all chickens.</p>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">python — extract_frames.py</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-python">import cv2
+import os
+
+def extract_frames(video_path, output_dir, frame_interval=30):
+    """Extract one frame every `frame_interval` frames."""
+    os.makedirs(output_dir, exist_ok=True)
+    cap = cv2.VideoCapture(video_path)
+    frame_count = 0
+    saved_count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if frame_count % frame_interval == 0:
+            filename = f"{output_dir}/frame{saved_count:06d}.jpg"
+            cv2.imwrite(filename, frame)
+            saved_count += 1
+        frame_count += 1
+
+    cap.release()
+    print(f"Saved {saved_count} frames from {frame_count} total")
+
+# Usage
+extract_frames("coop_recording.mp4", "data/images", frame_interval=30)</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">03</div>
+        <div>
+          <h3>Label Your Images</h3>
+          <p class="step-desc">Draw bounding boxes around each chicken and assign class names</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>Labeling is the most time-intensive step. Use a tool like <strong>Roboflow</strong>, <strong>Label Studio</strong>, or <strong>labelImg</strong> to annotate bounding boxes and export in YOLO format.</p>
+        <ul class="tip-list">
+          <li>Draw tight bounding boxes that encompass the full body of each chicken</li>
+          <li>Use a <strong>separate class for each individual chicken</strong> (e.g. <code>Babette</code>, <code>Matilda</code>, <code>Lottie</code>)</li>
+          <li>Aim to label at least 100–200 images per class for reliable accuracy</li>
+          <li><a href="https://roboflow.com" target="_blank" rel="noopener">Roboflow</a> offers a free tier with annotation tools and automatic train/val splitting</li>
+          <li>Export in <strong>YOLOv8 format</strong> — this generates a <code>.txt</code> file alongside each image</li>
+        </ul>
+        <div class="info-box">
+          <strong>YOLO label format</strong> — each <code>.txt</code> file contains one line per object:<br>
+          <code>class_id&nbsp;&nbsp;center_x&nbsp;&nbsp;center_y&nbsp;&nbsp;width&nbsp;&nbsp;height</code><br>
+          All values are normalized to [0, 1] relative to image dimensions. Example:<br>
+          <code>0 0.512 0.438 0.124 0.201</code> &nbsp;→ class 0 (Babette) at the given position.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">04</div>
+        <div>
+          <h3>Organize the Dataset</h3>
+          <p class="step-desc">Arrange files in the folder structure expected by Ultralytics YOLO</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>YOLO expects a specific folder layout with a central <code>data.yaml</code> config file. An 80 / 20 train / validation split is a good starting point.</p>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">folder structure</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>dataset/chicken/
+├── data.yaml              ← dataset config
+├── images/
+│   ├── train/             ← training images (.jpg)
+│   └── val/               ← validation images (.jpg)
+└── labels/
+    ├── train/             ← training labels (.txt)
+    └── val/               ← validation labels (.txt)</code></pre>
+        </div>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">yaml — data/data.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-yaml">path: ./dataset/chicken   # root directory of the dataset
+train: images/train       # training images (relative to path)
+val: images/val           # validation images
+
+names:
+  0: Babette
+  1: Matilda
+  2: Eggbert
+  3: Lottie</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">05</div>
+        <div>
+          <h3>Train the YOLO Model</h3>
+          <p class="step-desc">Fine-tune a pretrained YOLO checkpoint on your chicken dataset</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>Start from a pretrained YOLO checkpoint — this is called <em>transfer learning</em> and dramatically reduces both training time and the amount of labeled data you need. The <code>yolo11n.pt</code> (nano) or <code>yolo11m.pt</code> (medium) are good starting points depending on your hardware. These base weights are <strong>not included</strong> in the repository — Ultralytics downloads them automatically on first use. To use them in the built-in Train tab, place the downloaded <code>.pt</code> file into the <code>models/</code> folder first.</p>
+        <p>Install the Ultralytics library first:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-bash">pip install ultralytics opencv-python</code></pre>
+        </div>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">python — train.py</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-python">from ultralytics import YOLO
+
+# Load a pretrained YOLO11 checkpoint
+model = YOLO('yolo11n.pt')   # nano   — fastest, good for most hardware
+# model = YOLO('yolo11m.pt') # medium — better accuracy, needs more VRAM
+# model = YOLO('yolo11l.pt') # large  — highest accuracy, GPU recommended
+
+# Train on your labeled dataset
+model.train(
+    data='dataset/chicken/data.yaml',  # path to your dataset config
+    epochs=100,                        # training epochs
+    imgsz=640,                         # input image size
+    project='/tmp/yolo_runs',          # output directory
+    name='train',
+    exist_ok=True,
+)
+# Trained weights saved to /tmp/yolo_runs/train/weights/best.pt
+# Copy best.pt into your models/ folder and select it in the Setup tab</code></pre>
+        </div>
+        <div class="info-box">
+          <strong>Using ChickEye's built-in Train tab</strong><br>
+          If you're running ChickEye via Docker, you can skip the script above — the <strong>Train</strong> tab in the dashboard handles this automatically. Place your dataset in <code>dataset/</code>, open the Train tab, pick your base model, set epochs, and hit <em>Start Training</em>. The trained model appears in the Setup model selector when done.
+        </div>
+        <div class="info-box">
+          <strong>Hardware tips</strong>
+          <ul>
+            <li>A GPU with 4+ GB VRAM is strongly recommended — training will be 10–50× faster</li>
+            <li>CPU-only training is possible but expect several hours for 100 epochs</li>
+            <li><a href="https://colab.research.google.com" target="_blank" rel="noopener">Google Colab</a> (free tier) provides a capable GPU for one-off training sessions</li>
+            <li>100 epochs with ~1 000 images takes roughly 15–45 minutes on a modern GPU</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">06</div>
+        <div>
+          <h3>Evaluate &amp; Iterate</h3>
+          <p class="step-desc">Check model accuracy and improve it until it performs reliably</p>
+        </div>
+      </div>
+      <div class="step-content">
+        <p>After training, YOLO saves metrics and plots to <code>runs/train/chickeye_v1/</code>. Check <code>results.csv</code> and the generated charts for these key metrics:</p>
+        <ul class="tip-list">
+          <li><strong>mAP50</strong> — Mean Average Precision at 50% IoU. Aim for &gt; 0.85 for reliable detection</li>
+          <li><strong>Precision</strong> — How often a detection is actually correct (minimizes false positives)</li>
+          <li><strong>Recall</strong> — How often chickens are successfully detected (minimizes misses)</li>
+        </ul>
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">python — evaluate.py</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code class="language-python">from ultralytics import YOLO
+
+# Load your trained model
+model = YOLO('models/best11n.pt')  # path to your trained model
+
+# Run validation to see full metrics
+metrics = model.val(data='dataset/chicken/data.yaml')
+print(f"mAP50:    {metrics.box.map50:.3f}")
+print(f"mAP50-95: {metrics.box.map:.3f}")
+
+# Test on a single image — shows bounding boxes in a preview window
+results = model('dataset/chicken/images/val/chicken_00007.jpg', conf=0.6)
+results[0].show()
+
+# Save predictions to disk
+results[0].save(filename='prediction.jpg')</code></pre>
+        </div>
+        <p>If accuracy is insufficient, common improvements:</p>
+        <ul class="tip-list">
+          <li>Add more labeled images, especially for underperforming classes</li>
+          <li>Try a larger model variant (<code>yolo11m.pt</code> or <code>yolo11l.pt</code>)</li>
+          <li>Lower the confidence threshold to catch more chickens (at the cost of more false positives)</li>
+          <li>Add data augmentation or train for more epochs</li>
+          <li>Review mislabeled annotations — label quality is often the limiting factor</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================
+     Hosting Guide
+     ============================ -->
+<section id="hosting" class="section-dark">
+  <div class="container">
+    <h2 class="section-title">Hosting Your Own Server</h2>
+    <p class="section-sub">Deploy ChickEye on your own hardware — no cloud required</p>
+
+    <div class="hosting-options">
+      <div class="hosting-card active" onclick="showOption(this, 'docker')">
+        <div class="hosting-icon">🐳</div>
+        <div>Docker Compose</div>
+      </div>
+      <div class="hosting-card" onclick="showOption(this, 'standalone')">
+        <div class="hosting-icon">🖥️</div>
+        <div>Local Development</div>
+      </div>
+    </div>
+
+    <!-- Local Development -->
+    <div class="hosting-content hidden" id="opt-standalone">
+      <h3>Local Development</h3>
+      <p>Run the backend and model server directly on your machine for development or testing.</p>
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span class="code-lang">bash — backend</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-bash">cd backend
+pip install -r requirements.txt
+
+# Start the model server
+MODEL_PATH=models/best11n.pt uvicorn model_server:app --port 8080
+
+# In a second terminal — start the streaming backend
+uvicorn main:app --port 8000</code></pre>
+      </div>
+      <p>Then open <code>frontend/</code> in a separate terminal and run <code>npm install &amp;&amp; npm run dev</code> to start the Vite dev server on <code>http://localhost:5173</code>.</p>
+    </div>
+
+    <!-- Docker Compose -->
+    <div class="hosting-content" id="opt-docker">
+      <h3>Docker Compose (Recommended)</h3>
+      <p>One command spins up all three services — model server, streaming backend, and the React frontend behind nginx.</p>
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span class="code-lang">bash — build &amp; start</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-bash">git clone https://github.com/yourname/chickeye.git
+cd chickeye
+
+# Optional: copy and edit environment overrides
+cp .env.example .env
+
+docker compose up --build</code></pre>
+      </div>
+      <p>The dashboard is available at <code>http://localhost:80</code> (or the <code>HOST_PORT</code> you set in <code>.env</code>).</p>
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span class="code-lang">ini — .env (example)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code># Video source — RTSP URL, webcam index, or leave empty to configure in the UI
+VIDEO_SOURCE=rtsp://user:password@192.168.1.100:554/stream
+
+# Confidence threshold for detections (0.0 – 1.0)
+CONFIDENCE=0.6
+
+# Class names and colors (comma-separated, must match model training order)
+CLASS_NAMES=Babette,Matilda,Eggbert,Lottie
+CLASS_COLORS=#ef4444,#94a3b8,#3b82f6,#f59e0b
+
+# Active model (relative to models/ directory)
+MODEL_PATH=/app/models/best11n.pt
+
+# 0 = detection, 1 = segmentation
+MODEL_TYPE=0
+
+# Port exposed on the host
+HOST_PORT=80</code></pre>
+      </div>
+    </div>
+
+
+    <!-- API Endpoints -->
+    <h3 class="subsection-title">API Endpoints</h3>
+    <div class="api-table-wrapper">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><code>/health</code></td>
+            <td>Service health check — returns status and currently loaded model</td>
+          </tr>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><code>/config</code></td>
+            <td>Active runtime config: class names, colors, video source, and model path</td>
+          </tr>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><code>/models</code></td>
+            <td>List of <code>.pt</code> model files available in the <code>models/</code> directory</td>
+          </tr>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><code>/datasets</code></td>
+            <td>List of datasets in <code>dataset/</code> that contain a <code>data.yaml</code></td>
+          </tr>
+          <tr>
+            <td><span class="method post">POST</span></td>
+            <td><code>/setup</code></td>
+            <td>Save configuration (video source, class names, active model) and reload the model server</td>
+          </tr>
+          <tr>
+            <td><span class="method post">POST</span></td>
+            <td><code>/train/start</code></td>
+            <td>Start a training job in the background; accepts dataset, model, epochs, imgsz, output name</td>
+          </tr>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><code>/train/status</code></td>
+            <td>Current training state: running flag, recent log lines, error, and output model name</td>
+          </tr>
+          <tr>
+            <td><span class="method post">POST</span></td>
+            <td><code>/upload-video</code></td>
+            <td>Upload a video file to use as the video source; returns the server-side path</td>
+          </tr>
+          <tr>
+            <td><span class="method ws">WS</span></td>
+            <td><code>/ws/video</code></td>
+            <td>WebSocket stream of annotated JPEG frames with per-frame detection JSON</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================
+     Tech Stack
+     ============================ -->
+<section id="tech">
+  <div class="container">
+    <h2 class="section-title">Tech Stack</h2>
+    <p class="section-sub">Built with proven open-source tools</p>
+
+    <div class="tech-grid">
+      <div class="tech-item">
+        <div class="tech-name">YOLO11</div>
+        <div class="tech-desc">State-of-the-art real-time object detection by Ultralytics. Pretrained on COCO and fine-tuned on custom chicken data using transfer learning. Three size variants: nano, medium, and large.</div>
+        <div class="tech-tag">Computer Vision</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-name">FastAPI</div>
+        <div class="tech-desc">High-performance async Python web framework powering the REST API, WebSocket endpoints, and model inference server.</div>
+        <div class="tech-tag">Backend</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-name">OpenCV</div>
+        <div class="tech-desc">Frame capture, resizing, and JPEG encoding from RTSP streams and webcams. Also used for drawing bounding boxes on output frames.</div>
+        <div class="tech-tag">Video Processing</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-name">React + TypeScript</div>
+        <div class="tech-desc">Live web dashboard built with React 19 and TypeScript. Renders the annotated video feed on a canvas element via WebSocket, with real-time detection cards and a built-in training interface.</div>
+        <div class="tech-tag">Frontend</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-name">Docker Compose</div>
+        <div class="tech-desc">Orchestrates three services: a YOLO inference server, a FastAPI WebSocket streaming backend, and an nginx-proxied React frontend — all from a single <code>docker compose up</code>.</div>
+        <div class="tech-tag">Deployment</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-name">Vite + nginx</div>
+        <div class="tech-desc">Frontend built with Vite and React 19, served in production via nginx which also proxies WebSocket and REST requests to the backend containers.</div>
+        <div class="tech-tag">Frontend Tooling</div>
+      </div>
+    </div>
+
+    <div class="model-comparison">
+      <h3>Choosing a Model Variant</h3>
+      <p>All three <code>best11*.pt</code> models are included in the repository and trained on the chicken dataset. Pick based on your hardware.</p>
+      <div class="table-scroll">
+        <table class="model-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Size</th>
+              <th>Speed</th>
+              <th>Accuracy</th>
+              <th>Best For</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>best11n.pt</code> (nano)</td>
+              <td>~5 MB</td>
+              <td>⚡⚡⚡</td>
+              <td>★★☆</td>
+              <td>Fast CPU or any GPU</td>
+            </tr>
+            <tr>
+              <td><code>best11m.pt</code> (medium)</td>
+              <td>~40 MB</td>
+              <td>⚡⚡☆</td>
+              <td>★★★</td>
+              <td>Balanced — GPU recommended</td>
+            </tr>
+            <tr>
+              <td><code>best11l.pt</code> (large)</td>
+              <td>~51 MB</td>
+              <td>⚡☆☆</td>
+              <td>★★★</td>
+              <td>Best accuracy — GPU required</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================
+     Footer
+     ============================ -->
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span>🐔</span>
+        <strong>ChickEye</strong>
+      </div>
+      <p>An open-source chicken monitoring project using custom-trained YOLO models and self-hosted infrastructure.</p>
+      <p class="footer-note">
+        Built with
+        <a href="https://github.com/ultralytics/ultralytics" target="_blank" rel="noopener">Ultralytics YOLO</a>,
+        <a href="https://fastapi.tiangolo.com" target="_blank" rel="noopener">FastAPI</a>, and
+        <a href="https://react.dev" target="_blank" rel="noopener">React</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>
