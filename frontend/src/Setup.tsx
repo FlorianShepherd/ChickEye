@@ -22,18 +22,30 @@ export default function Setup({ onComplete }: SetupProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch('/models')
-      .then(r => r.json())
-      .then(d => {
-        const list: string[] = d.models ?? []
-        setModels(list)
-        if (list.length > 0) {
-          // Prefer trained models (not bare ultralytics base weights like yolo11n.pt)
+    Promise.all([
+      fetch('/config').then(r => r.json()).catch(() => null),
+      fetch('/models').then(r => r.json()).catch(() => null),
+    ]).then(([cfg, mdl]) => {
+      // Pre-populate from saved config
+      if (cfg) {
+        if (cfg.video_source) setVideoSource(cfg.video_source)
+        if (cfg.names?.length)  setClassNamesRaw(cfg.names.join('\n'))
+      }
+
+      // Populate model list, then resolve which one to select
+      const list: string[] = mdl?.models ?? []
+      setModels(list)
+      if (list.length > 0) {
+        if (cfg?.model_path && list.includes(cfg.model_path)) {
+          // Restore previously saved selection
+          setSelectedModel(cfg.model_path)
+        } else {
+          // Prefer trained models over base weights as default
           const trained = list.filter(m => !/^yolo\d/i.test(m))
           setSelectedModel(trained.length > 0 ? trained[0] : list[0])
         }
-      })
-      .catch(() => {})
+      }
+    })
   }, [])
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {

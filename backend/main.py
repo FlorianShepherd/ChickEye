@@ -134,7 +134,12 @@ async def list_models():
 @app.get("/config")
 async def config():
     cfg = _get_runtime_config()
-    return {"names": cfg["class_names"], "colors": cfg["class_colors"]}
+    return {
+        "names":        cfg["class_names"],
+        "colors":       cfg["class_colors"],
+        "video_source": cfg["video_source"],
+        "model_path":   cfg["model_path"],
+    }
 
 
 @app.post("/save-video")
